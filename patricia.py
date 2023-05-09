@@ -12,21 +12,10 @@ class Node:
 		self.next = []
 
 	def __str__(self):
-		#s = self.prefix + " " + self.string + " " + str(self.is_leaf) + " "
 		s = self.prefix + " "
-		s += str(self.idx)
-		#if self.previous is None:
-			#s += str(None)
-		#else:
-			#s += self.previous.prefix
-		#s = self.prefix + " " + str(self.previous.prefix)
-		#s = self.prefix
 		
 		for keys in self.keys:
-			#s += str(hex(keys).split('x')[-1]) + " "
-			#s += str(keys) + " "
-			pass
-		
+			s += str(keys) + " "
 		return s
 
 class Trie:
@@ -71,12 +60,18 @@ class Trie:
 		new_node1 = Node()
 		new_node2 = Node()
 
+		# Pesquisa o caminho que deverá ser feito para inserir
 		path = self.search(string)
+
+		# O ultimo nó será o modificado
 		in_node = path[-1]
 
 		string_sufix = string
 		path_prefix = ""
 		
+		# Recupera os prefixo do caminho
+		# e calcula o tamanho do prefixo 
+		# entre a string e o prefixo do caminho
 		for n in path:
 			max_prefix = longest_prefix(path_prefix, string)
 			if max_prefix > 0:
@@ -84,25 +79,37 @@ class Trie:
 			
 			path_prefix += n.prefix
 		
+		# Se a string e o prefixo do caminho são iguais
+		# é pq ja existe essa string na Trie
 		if path_prefix == string:
+			
+			# Logo se o nó de entrada é folha armazena a chave
 			if in_node.is_leaf:
 				in_node.keys.append(key)
+			
+			# Senão procura o caractere que marca
+			# o final da string e adiciona a chave	
 			else:
 				for leaf in in_node.next:
 					if leaf.prefix == '*':
 						leaf.keys.append(key)
 			return
 
-		
+		# Adiquire a nova string que será armazenada
 		max_prefix = longest_prefix(path_prefix, string)
 		new_string = string[max_prefix:]
 
+		# Se a nova string for vazia
+		# Adicione o caractere que marca o final da string
 		if new_string == "":
 			new_string = '*'
-			#print("*", string)
-		split = False
+		
+		# Se o prefixo do nó de entrada tiver mais que um caractere
+		# significa que podemos dividir o nó
 		if len(in_node.prefix) > 1:
-			split = True
+			# Divide o nó em dois
+			# onde um será o prefixo da string
+			# e o outro sufixo do nó de entrada
 
 			max_prefix2 = longest_prefix(in_node.prefix, string_sufix)
 			prefix = string_sufix[:max_prefix2]
@@ -136,8 +143,8 @@ class Trie:
 			for nxt in new_node1.next:
 				nxt.previous = new_node1
 			new_node1.previous = in_node
-			#print(new_node1, in_node)
 
+		# Add o novo nó
 		new_node2.string = string
 		new_node2.prefix = new_string
 		new_node2.is_leaf = True
@@ -147,7 +154,8 @@ class Trie:
 		in_node.next.append(new_node2)
 		new_node2.previous = in_node
 
-
+	# Funçao que percorre toda a arvore
+	# alocando o indice para cada nó
 	def fix_idx(self):
 		q = []
 		q.append(self.root)
@@ -175,6 +183,7 @@ class Trie:
 	def encode(self, f_out):
 		self._bfs(self.root, f_out)
 
+	# Um bfs para codificar os nós da Trie
 	def _bfs(self, node, f_out):
 		visited = [False] * (self.size + 1)
 		q = []
@@ -182,52 +191,21 @@ class Trie:
 		visited[node.idx] = True
 		cnt = 1
 		while q:
-			#print(cnt)
 			s = q.pop(0)
 			if s.previous is not None:
-				out = "(" + str(s.previous.idx) + "," + s.prefix + ") "
+				out = "(" + str(s.previous.idx)
+
+				if s.prefix == '"' or '"' in s.prefix:
+					out += ",'" + s.prefix + "') "
+				else:
+					out += ",\"" + s.prefix + "\") "
 				
 				for keys in s.keys:
 					out += str(hex(keys).split('x')[-1]) + " "
 				f_out.write(out)
 				f_out.write("\n")
-				#print(str(cnt) + " (" + str(s.previous.idx) + "," + s.prefix + ")")
 				cnt += 1
 			for x in s.next:
 				if visited[x.idx] == False:
 					q.append(x)
 					visited[x.idx] = True
-'''
-with open(sys.argv[1], 'r') as f:
-    f_out = open(sys.argv[2], 'w')
-    t = Patricia()
-    cnt = 0
-
-    for line in f:
-        words = line.strip().split()
-        for word in words:
-        	#print(word, cnt)
-        	t.insert(word, cnt)
-        	cnt += 1
-    t.print(f_out)
-
-#print("longest prefix = ", longest_prefix("estrada", "cheia"))
-        
-'''
-'''
-t = Trie()
-
-t.insert("bear",0)
-t.insert("bell",1)
-t.insert("bid",2)
-t.insert("bull",3)
-t.insert("sell",4)
-t.insert("stock",5)
-t.insert("stop",6)
-#print(t.size)
-#t.print()
-
-t.bfs()
-#p = t.search_key(8)
-#print(p.string)
-'''
